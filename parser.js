@@ -34,7 +34,7 @@ function parseBool(string) {
   if (string.startsWith("true")) return [true, string.slice(4)];
   return [false, string.slice(5)];
 }
-console.log(parseBool("false333$@$@hfhsd"))
+// console.log(parseBool("false333$@$@hfhsd"))
 
 /**
  * @param {string} string - The string to parse.
@@ -47,18 +47,88 @@ console.log(parseBool("false333$@$@hfhsd"))
  *   // => null
  */
 function parseString(string) {
-  const regex = /^"([\u0000-\u001F^"\\])*"/;
+  // const regex = /^"([\u0000-\u001F^"\\])*"/;
 
-  const match = string.match(regex);
-  if (!match) {
-    return null;
-  }
-  const matchedString = match[0];
-  const remaining = string.slice(matchedString.length);
+  // const match = string.match(regex);
+  // if (!match) {
+  //   return null;
+  // }
+  // const matchedString = match[0];
+  // const remaining = string.slice(matchedString.length);
 
   return [matchedString, remaining];
-}
-console.log(parseString('"U\"N" rest'))
+    if (!input.startsWith('"')) return null;
+     
+    let i =1;
+    while (i<input.length){
+        if (input[i]=='"') return [result,remaining];
+        if (input[i]=="\\") 
+          i++ ;
+    }
+    
+    let esc = input[i];
+    
+    switch (esc){
+       case '"':
+       result += '"';
+       break;
+       case "\\":
+       result += "\\"
+       break;
+       case "/":
+       result +="/";
+       break;
+       case "/b":
+       result +="/b";
+       break;
+       case "/f":
+        result +="/f";
+        break;
+        case "n":
+          result +="/n";
+          break;  
+          case "/r":
+            result +="/r";
+            break;
+            case "t":
+           result += "\t"
+           break;
+           
+
+            let hex = input.slice(i+1,i+5);
+            if (!/^[0-9a-fA-F]{4}$/.test(hex))
+             return null;
+            let code=parseInt(hex,16)
+          
+            if (code >=0 && code <= 32){
+                return null;
+            }
+            result+= String.fromCharCode(code);
+            i+=4
+            break;
+            default:
+              return null;
+            
+          }
+         i ++;
+
+
+         return null;
+ 
+     
+    
+
+
+      
+
+       }
+      console.log(parseString("string566")) 
+    
+       
+
+
+
+// console.log(parseString('"U\"N" rest'))
 /**
  * @param {string} string - The string to parse.
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
