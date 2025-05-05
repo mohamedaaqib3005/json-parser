@@ -1,4 +1,3 @@
-
 /**
  * @param {string} string - The string to parse.
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
@@ -10,11 +9,12 @@
  *   // => null
  */
 function parseNull(string) {
-  if (!string.startsWith("null"));
-  return null;
+  if (!string.startsWith("null")) return null;
+
   const remaining = string.slice(4);
   return [null, remaining];
 }
+// console.log(parseNull("null$@$@$@fas"));
 
 /**
  * @param {string} string - The string to parse.
@@ -27,21 +27,14 @@ function parseNull(string) {
  *   // => null
  */
 function parseBool(string) {
-  let remaining;
-  let value;
-
+  
   if (!string.startsWith("true") && !string.startsWith("false")) {
     return null;
   }
-  if (string.startsWith("true")) {
-    remaining = string.slice(4);
-    value = true;
-  } else {
-    remaining = string.slice(5);
-    value = false;
-  }
-  return [value, remaining];
+  if (string.startsWith("true")) return [true, string.slice(4)];
+  return [false, string.slice(5)];
 }
+console.log(parseBool("false333$@$@hfhsd"))
 
 /**
  * @param {string} string - The string to parse.
@@ -54,21 +47,18 @@ function parseBool(string) {
  *   // => null
  */
 function parseString(string) {
-  const regex = /^"([^"\\\u0000-\u001F])*"/;
+  const regex = /^"([\u0000-\u001F^"\\])*"/;
 
   const match = string.match(regex);
   if (!match) {
     return null;
   }
-
   const matchedString = match[0];
   const remaining = string.slice(matchedString.length);
 
   return [matchedString, remaining];
 }
-
-
-
+console.log(parseString('"U\"N" rest'))
 /**
  * @param {string} string - The string to parse.
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
