@@ -27,13 +27,15 @@ function parseNull(string) {
  *   // => null
  */
 function parseBool(string) {
-  
-  if (!string.startsWith("true") && !string.startsWith("false")) {
-    return null;
+  if (string.startsWith("true")) {
+    return [true, string.slice(4)];
   }
-  if (string.startsWith("true")) return [true, string.slice(4)];
-  return [false, string.slice(5)];
+  if (string.startsWith("false")) {
+    return [false, string.slice(5)];
+  }
+  return null;
 }
+
 // console.log(parseBool("false333$@$@hfhsd"))
 
 /**
@@ -55,83 +57,75 @@ function parseString(input) {
   // }
   // const matchedString = match[0];
   // const remaining = string.slice(matchedString.length);
-  
-  if (!input.startsWith('"')) 
-    return null;
-  
-    let i = 1;
-    let result = "";
-  
-    while (i < input.length) {
 
-      let char = input[i];
-  
-      if (char === '"') {
+  if (!input.startsWith('"')) return null;
 
-        return [result, input.slice(i + 1)];
-      }
-  
-      if (char === "\\") {
-        i++;
+  let i = 1;
+  let result = "";
 
-        if (i >= input.length) return null;
-  
-       let esc = input[i];
+  while (i < input.length) {
+    let char = input[i];
 
-        switch (esc) {
-          case '"':
-            result += '"';
-            break;
-          case "\\":
-            result += "\\";
-            break;
-          case "/":
-            result += "/";
-            break;
-          case "b":
-            result += "\b";
-            break;
-          case "f":
-            result += "\f";
-            break;
-          case "n":
-            result += "\n";
-            break;
-          case "r":
-            result += "\r";
-            break;
-          case "t":
-            result += "\t";
-            break;
-          case "u":
-            let hex = input.slice(i + 1, i + 5);
-            if (!/^[0-9a-fA-F]{4}$/.test(hex)) return null;
-            let code = parseInt(hex, 16);
-            if (code >= 0 && code <= 31) return null;
-            result += String.fromCharCode(code);
-            i += 4;
-            break;
-
-          default:
-          return null;
-        }
-        i++;
-
-      } else {
-        if (char.charCodeAt(0) < 32) 
-        return null;
-        result += char;
-        i++; 
-      }
+    if (char === '"') {
+      return [result, input.slice(i + 1)];
     }
-  
-    return null; 
+
+    if (char === "\\") {
+      i++;
+
+      if (i >= input.length) return null;
+
+      let esc = input[i];
+
+      switch (esc) {
+        case '"':
+          result += '"';
+          break;
+        case "\\":
+          result += "\\";
+          break;
+        case "/":
+          result += "/";
+          break;
+        case "b":
+          result += "\b";
+          break;
+        case "f":
+          result += "\f";
+          break;
+        case "n":
+          result += "\n";
+          break;
+        case "r":
+          result += "\r";
+          break;
+        case "t":
+          result += "\t";
+          break;
+        case "u":
+          let hex = input.slice(i + 1, i + 5);
+          if (!/^[0-9a-fA-F]{4}$/.test(hex)) return null;
+          let code = parseInt(hex, 16);
+          if (code >= 0 && code <= 31) return null;
+          result += String.fromCharCode(code);
+          i += 4;
+          break;
+
+        default:
+          return null;
+      }
+      i++;
+    } else {
+      if (char.charCodeAt(0) < 32) return null;
+      result += char;
+      i++;
+    }
   }
-  
-  console.log(parseString('"string566"')); 
-       
 
+  return null;
+}
 
+// console.log(parseString('"string566"'));
 
 // console.log(parseString('"U\"N" rest'))
 /**
@@ -165,7 +159,50 @@ function parseNumber(string) {
  *   parseArray('wabalabadubdub')
  *   // => null
  */
-function parseArray(string) {}
+function parseArray(string) {
+  if (!string.startsWith("[")) return null;
+  let i = 1;
+
+  function skipWhitespace() {
+    while (/\s/.test(string[i])) i++;
+  }
+
+  const arr = [];
+
+  skipWhitespace();
+  if (string[i] === "]") return [arr, string.slice(i + 1)];
+
+  while (i < string.length) {
+    skipWhitespace();
+
+    if (string.startsWith("null", i)) {
+      arr.push(null);
+      i += 4;
+      continue;
+    }
+
+    const value = parseValue(string.slice(i));
+    if (!value) return null;
+
+    const [parsedValue, remaining] = value;
+    arr.push(parsedValue);
+    i = string.length - remaining.length;
+
+    skipWhitespace();
+
+    if (string[i] === "]") {
+      return [arr, string.slice(i + 1)];
+    } else if (string[i] === ",") {
+      i++;
+      continue;
+    } else {
+      return null;
+    }
+  }
+
+  return null;
+}
+console.log(parseArray("[1, 2, 3] rest"));
 
 /**
  * @param {string} string - The string to parse.
@@ -177,8 +214,54 @@ function parseArray(string) {}
  *   parseObject('wabalabadubdub')
  *   // => null
  */
-function parseObject(string) {}
+function parseObject(string) {
+  if (!string.startsWith("{")) return null;
+  let i = 1;
 
+  function skipWhitespace() {
+    while (/\s/.test(string[i])) i++;
+  }
+
+  skipWhitespace();
+
+  const obj = {};
+  if (string[i] === "}") return [obj, string.slice(i + 1)];
+
+  while (i < string.length) {
+    skipWhitespace();
+
+    const keyResult = parseString(string.slice(i));
+    if (!keyResult) return null;
+    const [key, remainingAfterKey] = keyResult;
+    i = string.length - remainingAfterKey.length;
+
+    skipWhitespace();
+
+    if (string[i] !== ":") return null;
+    i++;
+
+    skipWhitespace();
+
+    const valueResult = parseValue(string.slice(i));
+    if (!valueResult) return null;
+    const [value, remainingAfterValue] = valueResult;
+    obj[key] = value;
+    i = string.length - remainingAfterValue.length;
+
+    skipWhitespace();
+
+    if (string[i] === "}") {
+      return [obj, string.slice(i + 1)];
+    } else if (string[i] === ",") {
+      i++;
+      continue;
+    } else {
+      return null;
+    }
+  }
+  return null;
+}
+console.log(parseObject('{"name": "Aaqib"}'));
 /**
  * @param {string} string - The string to parse.
  * @returns {Object} array containing parsed value, throws error if parsing fails.
