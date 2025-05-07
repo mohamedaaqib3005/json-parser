@@ -3,14 +3,15 @@
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
  * @example
  *   parseNull('null rest')
- *   // => [null, ' rest']
+ *   // => [null, ' rest']add
  * @example
  *   parseNull('wabalabadubdub')
  *   // => null
  */
 function parseNull(string) {
-  if (!string.startsWith("null")) return null;
-
+  if (!string.startsWith("null")) {
+    return null;
+  }
   const remaining = string.slice(4);
   return [null, remaining];
 }
@@ -48,7 +49,7 @@ function parseBool(string) {
  *   parseString('wabalabadubdub')
  *   // => null
  */
-function parseString(input) {
+function parseString(string) {
   // const regex = /^"([\u0000-\u001F^"\\])*"/;
 
   // const match = string.match(regex);
@@ -58,24 +59,26 @@ function parseString(input) {
   // const matchedString = match[0];
   // const remaining = string.slice(matchedString.length);
 
-  if (!input.startsWith('"')) return null;
+  if (!string.startsWith('"')) {
+    return null;
+  }
 
   let i = 1;
   let result = "";
 
-  while (i < input.length) {
-    let char = input[i];
+  while (i < string.length) {
+    let char = string[i];
 
     if (char === '"') {
-      return [result, input.slice(i + 1)];
+      return [result, string.slice(i + 1)];
     }
 
     if (char === "\\") {
       i++;
 
-      if (i >= input.length) return null;
+      if (i >= string.length) return null;
 
-      let esc = input[i];
+      let esc = string[i];
 
       switch (esc) {
         case '"':
@@ -103,7 +106,7 @@ function parseString(input) {
           result += "\t";
           break;
         case "u":
-          let hex = input.slice(i + 1, i + 5);
+          let hex = string.slice(i + 1, i + 5);
           if (!/^[0-9a-fA-F]{4}$/.test(hex)) return null;
           let code = parseInt(hex, 16);
           if (code >= 0 && code <= 31) return null;
@@ -116,12 +119,13 @@ function parseString(input) {
       }
       i++;
     } else {
-      if (char.charCodeAt(0) < 32) return null;
+      if (char.charCodeAt(0) < 32) {
+        return null;
+      }
       result += char;
       i++;
     }
   }
-
   return null;
 }
 
@@ -160,7 +164,9 @@ function parseNumber(string) {
  *   // => null
  */
 function parseArray(string) {
-  if (!string.startsWith("[")) return null;
+  if (!string.startsWith("[")) {
+    return null;
+  } 
   let i = 1;
 
   function skipWhitespace() {
@@ -170,8 +176,9 @@ function parseArray(string) {
   const arr = [];
 
   skipWhitespace();
-  if (string[i] === "]") return [arr, string.slice(i + 1)];
-
+  if (string[i] === "]") {
+    return [arr, string.slice(i + 1)];
+  }
   while (i < string.length) {
     skipWhitespace();
 
@@ -182,8 +189,9 @@ function parseArray(string) {
     }
 
     const value = parseValue(string.slice(i));
-    if (!value) return null;
-
+    if (!value) {
+      return null;
+    }
     const [parsedValue, remaining] = value;
     arr.push(parsedValue);
     i = string.length - remaining.length;
@@ -199,10 +207,9 @@ function parseArray(string) {
       return null;
     }
   }
-
   return null;
 }
-console.log(parseArray("[1, 2, 3] rest"));
+// console.log(parseArray("[1, 2, 3] rest"));
 
 /**
  * @param {string} string - The string to parse.
@@ -215,18 +222,23 @@ console.log(parseArray("[1, 2, 3] rest"));
  *   // => null
  */
 function parseObject(string) {
-  if (!string.startsWith("{")) return null;
+  if (!string.startsWith("{")) {
+    return null;
+  }
   let i = 1;
+ 
 
   function skipWhitespace() {
-    while (/\s/.test(string[i])) i++;
+    while (/\s/.test(string[i])) 
+      i++;
   }
 
   skipWhitespace();
 
   const obj = {};
-  if (string[i] === "}") return [obj, string.slice(i + 1)];
-
+  if (string[i] === "}") {
+    return [obj, string.slice(i + 1)];
+  }
   while (i < string.length) {
     skipWhitespace();
 
@@ -237,13 +249,17 @@ function parseObject(string) {
 
     skipWhitespace();
 
-    if (string[i] !== ":") return null;
-    i++;
+    if (string[i] !== ":") {
+     return null;
+     i++;
+    } 
 
     skipWhitespace();
 
     const valueResult = parseValue(string.slice(i));
-    if (!valueResult) return null;
+    if (!valueResult){
+      return null;
+    } 
     const [value, remainingAfterValue] = valueResult;
     obj[key] = value;
     i = string.length - remainingAfterValue.length;
@@ -261,7 +277,19 @@ function parseObject(string) {
   }
   return null;
 }
-console.log(parseObject('{"name": "Aaqib"}'));
+console.log(parseObject('{"a": 1} rest'));
+
+function parseValue(string)  {
+  string = string.trim();
+  return (
+    parseNull(string) ||
+    parseBool(string) ||
+    parseNumber(string) ||
+    parseString(string) ||
+    parseArray(string) ||
+    parseObject(string)
+  );
+};
 /**
  * @param {string} string - The string to parse.
  * @returns {Object} array containing parsed value, throws error if parsing fails.
