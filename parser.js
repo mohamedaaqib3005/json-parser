@@ -247,7 +247,8 @@ function parseObject(string) {
     skipWhitespace();
 
     const keyResult = parseString(string.slice(i));
-    if (!keyResult) return null;
+    if (!keyResult) 
+      return null;
     const [key, remainingAfterKey] = keyResult;
     i = string.length - remainingAfterKey.length;
 
