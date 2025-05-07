@@ -76,8 +76,9 @@ function parseString(string) {
     if (char === "\\") {
       i++;
 
-      if (i >= string.length) return null;
-
+      if (i >= string.length) {
+        return null;
+      }
       let esc = string[i];
 
       switch (esc) {
@@ -107,9 +108,12 @@ function parseString(string) {
           break;
         case "u":
           let hex = string.slice(i + 1, i + 5);
-          if (!/^[0-9a-fA-F]{4}$/.test(hex)) return null;
+          if (!/^[0-9a-fA-F]{4}$/.test(hex)) {
+            return null;
+          }
           let code = parseInt(hex, 16);
-          if (code >= 0 && code <= 31) return null;
+          if (code >= 0 && code <= 31) 
+            return null;
           result += String.fromCharCode(code);
           i += 4;
           break;
