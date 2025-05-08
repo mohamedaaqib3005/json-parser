@@ -31,9 +31,11 @@ function parseBool(string) {
   if (string.startsWith("true")) {
     return [true, string.slice(4)];
   }
+
   if (string.startsWith("false")) {
     return [false, string.slice(5)];
   }
+
   return null;
 }
 
@@ -81,6 +83,10 @@ function parseString(string) {
 
       let esc = string[i];
 
+      // const charMap = { '"': '"', '\\': '\\', '/': '/', 'b': '\b', }
+      // if (charMap[esc]) {
+      //   result += charMap[esc]
+      }
       switch (esc) {
         case '"':
           result += '"';
@@ -110,6 +116,7 @@ function parseString(string) {
           let hex = string.slice(i + 1, i + 5);
           if (!/^[0-9a-fA-F]{4}$/.test(hex)) 
             return null;
+
           let code = parseInt(hex, 16);
           if (code >= 0 && code <= 31) 
             return null;
@@ -132,9 +139,9 @@ function parseString(string) {
   return null;
 }
 
-// console.log(parseString('"string566"'));
+console.log(parseString('"\u0041"'));
 
-// console.log(parseString('"U\"N" rest'))
+ console.log(parseString('"name":"Sam"'))
 /**
  * @param {string} string - The string to parse.
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
@@ -151,9 +158,11 @@ function parseNumber(string) {
   if (!match) {
     return null;
   }
+
   const number = Number(match[0]);
   const remaining = string.slice(match[0].length);
   return [number, remaining];
+
 }
 
 /**
@@ -173,7 +182,8 @@ function parseArray(string) {
   let i = 1;
 
   function skipWhitespace() {
-    while (/\s/.test(string[i])) i++;
+    while (/\s/.test(string[i])) 
+      i++;
   }
 
   const arr = [];
@@ -181,19 +191,15 @@ function parseArray(string) {
   skipWhitespace();
   if (string[i] === "]") {
     return [arr, string.slice(i + 1)];
+
   }
   while (i < string.length) {
     skipWhitespace();
 
-    if (string.startsWith("null", i)) {
-      arr.push(null);
-      i += 4;
-      continue;
-    }
-
     const value = parseValue(string.slice(i));
     if (!value) {
       return null;
+
     }
     const [parsedValue, remaining] = value;
     arr.push(parsedValue);
@@ -203,17 +209,20 @@ function parseArray(string) {
 
     if (string[i] === "]") {
       return [arr, string.slice(i + 1)];
+
     } else if (string[i] === ",") {
       i++;
       continue;
     } else {
       return null;
+
     }
   }
   return null;
+
 }
 // console.log(parseArray("[1, 2, 3] rest"));
-
+ console.log(parseArray("[a,c,v]"));
 /**
  * @param {string} string - The string to parse.
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
@@ -228,9 +237,9 @@ function parseObject(string) {
   if (!string.startsWith("{")) {
     return null;
   }
+
   let i = 1;
  
-
   function skipWhitespace() {
     while (/\s/.test(string[i])) 
       i++;
@@ -248,6 +257,7 @@ function parseObject(string) {
     const keyResult = parseString(string.slice(i));
     if (!keyResult) 
       return null;
+
     const [key, remainingAfterKey] = keyResult;
     i = string.length - remainingAfterKey.length;
 
@@ -255,6 +265,7 @@ function parseObject(string) {
 
     if (string[i] !== ":") 
      return null;
+
      i++;
 
     skipWhitespace();
@@ -262,6 +273,7 @@ function parseObject(string) {
     const valueResult = parseValue(string.slice(i));
     if (!valueResult) 
       return null;
+
     const [value, remainingAfterValue] = valueResult;
     obj[key] = value;
     i = string.length - remainingAfterValue.length;
@@ -275,11 +287,16 @@ function parseObject(string) {
       continue;
     } else {
       return null;
+
     }
   }
   return null;
+
 }
-console.log(parseObject('{"a": 1} rest'));
+// console.log(parseObject('{"{:}": 1}'));
+console.log(parseObject('{"key{}":"value"}'));
+console.log(parseObject('{"name":"Aaqib"}'));
+
 
 function parseValue(string)  {
   string = string.trim();
@@ -303,4 +320,14 @@ function parseValue(string)  {
  *   parseObject('wabalabadubdub')
  *   // throws error
  */
-function parseJSON(string) {}
+function parseJSON(string) {
+  const result = parseValue(string.trim())
+
+  if (!result){
+    throw new Error ('Invalid Json')
+  }
+
+  const [value,rest] = result;
+  return value;
+}
+
