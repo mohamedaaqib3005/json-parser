@@ -78,14 +78,13 @@ function parseString(string) {
     if (char === "\\") {
       i++;
 
-      if (i >= string.length) 
-        return null;
+      if (i >= string.length) return null;
 
       let esc = string[i];
 
-      // const charMap = { '"': '"', '\\': '\\', '/': '/', 'b': '\b', }
-      // if (charMap[esc]) {
-      //   result += charMap[esc]
+      const charMap = { '"': '"', "\\": "\\", "/": "/", b: "\b" };
+      if (charMap[esc]) {
+        result += charMap[esc];
       }
       switch (esc) {
         case '"':
@@ -114,12 +113,10 @@ function parseString(string) {
           break;
         case "u":
           let hex = string.slice(i + 1, i + 5);
-          if (!/^[0-9a-fA-F]{4}$/.test(hex)) 
-            return null;
+          if (!/^[0-9a-fA-F]{4}$/.test(hex)) return null;
 
           let code = parseInt(hex, 16);
-          if (code >= 0 && code <= 31) 
-            return null;
+          if (code >= 0 && code <= 31) return null;
           result += String.fromCharCode(code);
           i += 4;
           break;
@@ -141,7 +138,7 @@ function parseString(string) {
 
 console.log(parseString('"\u0041"'));
 
- console.log(parseString('"name":"Sam"'))
+console.log(parseString('"name":"Sam"'));
 /**
  * @param {string} string - The string to parse.
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
@@ -162,7 +159,6 @@ function parseNumber(string) {
   const number = Number(match[0]);
   const remaining = string.slice(match[0].length);
   return [number, remaining];
-
 }
 
 /**
@@ -178,12 +174,11 @@ function parseNumber(string) {
 function parseArray(string) {
   if (!string.startsWith("[")) {
     return null;
-  } 
+  }
   let i = 1;
 
   function skipWhitespace() {
-    while (/\s/.test(string[i])) 
-      i++;
+    while (/\s/.test(string[i])) i++;
   }
 
   const arr = [];
@@ -191,7 +186,6 @@ function parseArray(string) {
   skipWhitespace();
   if (string[i] === "]") {
     return [arr, string.slice(i + 1)];
-
   }
   while (i < string.length) {
     skipWhitespace();
@@ -199,7 +193,6 @@ function parseArray(string) {
     const value = parseValue(string.slice(i));
     if (!value) {
       return null;
-
     }
     const [parsedValue, remaining] = value;
     arr.push(parsedValue);
@@ -209,20 +202,17 @@ function parseArray(string) {
 
     if (string[i] === "]") {
       return [arr, string.slice(i + 1)];
-
     } else if (string[i] === ",") {
       i++;
       continue;
     } else {
       return null;
-
     }
   }
   return null;
-
 }
 // console.log(parseArray("[1, 2, 3] rest"));
- console.log(parseArray("[a,c,v]"));
+console.log(parseArray("[a,c,v]"));
 /**
  * @param {string} string - The string to parse.
  * @returns {(Array|null)} array containing parsed value and rest of the string, null if parsing fails,.
@@ -239,40 +229,35 @@ function parseObject(string) {
   }
 
   let i = 1;
- 
+
   function skipWhitespace() {
-    while (/\s/.test(string[i])) 
-      i++;
+    while (/\s/.test(string[i])) i++;
   }
 
   skipWhitespace();
 
   const obj = {};
-  if (string[i] === "}") 
-    return [obj, string.slice(i + 1)];
+  if (string[i] === "}") return [obj, string.slice(i + 1)];
 
   while (i < string.length) {
     skipWhitespace();
 
     const keyResult = parseString(string.slice(i));
-    if (!keyResult) 
-      return null;
+    if (!keyResult) return null;
 
     const [key, remainingAfterKey] = keyResult;
     i = string.length - remainingAfterKey.length;
 
     skipWhitespace();
 
-    if (string[i] !== ":") 
-     return null;
+    if (string[i] !== ":") return null;
 
-     i++;
+    i++;
 
     skipWhitespace();
 
     const valueResult = parseValue(string.slice(i));
-    if (!valueResult) 
-      return null;
+    if (!valueResult) return null;
 
     const [value, remainingAfterValue] = valueResult;
     obj[key] = value;
@@ -287,18 +272,15 @@ function parseObject(string) {
       continue;
     } else {
       return null;
-
     }
   }
   return null;
-
 }
 // console.log(parseObject('{"{:}": 1}'));
 console.log(parseObject('{"key{}":"value"}'));
 console.log(parseObject('{"name":"Aaqib"}'));
 
-
-function parseValue(string)  {
+function parseValue(string) {
   string = string.trim();
   return (
     parseNull(string) ||
@@ -308,7 +290,7 @@ function parseValue(string)  {
     parseArray(string) ||
     parseObject(string)
   );
-};
+}
 /**
  * @param {string} string - The string to parse.
  * @returns {Object} array containing parsed value, throws error if parsing fails.
@@ -321,13 +303,70 @@ function parseValue(string)  {
  *   // throws error
  */
 function parseJSON(string) {
-  const result = parseValue(string.trim())
+  const result = parseValue(string.trim());
 
-  if (!result){
-    throw new Error ('Invalid Json')
+  if (!result) {
+    throw new Error("Invalid Json");
   }
 
-  const [value,rest] = result;
+  const [value, rest] = result;
   return value;
 }
+console.log(parseJSON("[]"));
+const { error } = require("console");
 
+const fs = require("fs");
+
+const filePaths = [
+  "./test-inputs/pass1.json",
+  "./test-inputs/pass2.json",
+  "./test-inputs/pass3.json",
+  "./test-inputs/pass4.json",
+  "./test-inputs/pass5.json",
+];
+
+filePaths.forEach((filepath) => {
+  fs.readFile(filepath, "utf8", (err, data) => {
+    if (err) {
+      console.error("Error reading file:", err.message);
+      return;
+    }
+
+    try {
+      const parsedData = JSON.parse(data);
+      console.log("Passes the test:", parsedData);
+    } catch (e) {
+      throw new Error("Invalid JSON");
+    }
+  });
+});
+
+const readline = require("readline");
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+function inputV(input) {
+  rl.question(
+    "Give your input JSON string or type exit to exit :\n",
+    (input) => {
+      if (input.trim().toLowerCase() === "exit") {
+        console.log("Exiting the window");
+        rl.close();
+        return;
+      }
+      try {
+        const output = parseJSON(input);
+        const prettierOutput = JSON.stringify(output, 2);
+        console.log("Your parsed Output is:", prettierOutput);
+      } catch (error) {
+        console.log("Invalid Error:", error.message);
+      }
+
+      inputV();
+    }
+  );
+}
+inputV();
